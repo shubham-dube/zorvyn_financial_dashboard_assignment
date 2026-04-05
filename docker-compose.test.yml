@@ -1,0 +1,39 @@
+services:
+  postgres_test:
+    image: postgres:16-alpine
+    container_name: finance_postgres_test
+    environment:
+      POSTGRES_DB: finance_test
+      POSTGRES_USER: finance_test
+      POSTGRES_PASSWORD: test_secret
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finance_test -d finance_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    networks:
+      - finance_test_network
+
+  redis_test:
+    image: redis:7-alpine
+    container_name: finance_redis_test
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly no
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    networks:
+      - finance_test_network
+
+networks:
+  finance_test_network:
+    driver: bridge

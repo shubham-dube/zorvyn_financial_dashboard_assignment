@@ -1,0 +1,73 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: finance_api_dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://finance:finance_secret@postgres:5432/finance_dev
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    networks:
+      - finance_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: finance_postgres_dev
+    environment:
+      POSTGRES_DB: finance_dev
+      POSTGRES_USER: finance
+      POSTGRES_PASSWORD: finance_secret
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finance -d finance_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - finance_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: finance_redis_dev
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ""
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - finance_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  finance_network:
+    driver: bridge
