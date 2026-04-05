@@ -1,7 +1,7 @@
 {
   "name": "finance-dashboard-backend",
   "version": "1.0.0",
-  "description": "Production-grade Finance Data Processing and Access Control API",
+  "description": "Finance Data Processing and Access Control API",
   "main": "dist/src/server.js",
   "type": "module",
   "scripts": {

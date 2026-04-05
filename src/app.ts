@@ -61,11 +61,6 @@ export async function buildApp() {
   await app.register(authPlugin);
   await app.register(rateLimitPlugin);
 
-  // Documentation
-  if (env.NODE_ENV === 'development') {
-    await app.register(swaggerPlugin);
-  }
-
   // Error handler
   app.setErrorHandler(errorHandler);
 
@@ -86,5 +81,11 @@ export async function buildApp() {
   await app.register(dashboardRoutes, { prefix: `${env.API_PREFIX}/dashboard` });
   await app.register(auditRoutes, { prefix: `${env.API_PREFIX}/audit` });
 
+  // Documentation (must be after routes so swagger can scan them)
+  if (env.NODE_ENV === 'development') {
+    await app.register(swaggerPlugin);
+  }
+
   return app;
 }
+

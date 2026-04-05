@@ -14,6 +14,10 @@ async function swaggerPlugin(fastify: FastifyInstance) {
       },
       servers: [
         {
+          url: `https://fin-dashboard-api-ipd3q.ondigitalocean.app`,
+          description: 'Production server',
+        },
+        {
           url: `http://localhost:${env.PORT}`,
           description: 'Development server',
         },
