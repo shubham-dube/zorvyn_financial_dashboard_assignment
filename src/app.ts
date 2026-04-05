@@ -65,6 +65,11 @@ export async function buildApp() {
   await app.register(authPlugin);
   await app.register(rateLimitPlugin);
 
+  // Documentation must be registered before routes so swagger can collect them
+  if (swaggerEnabled) {
+    await app.register(swaggerPlugin);
+  }
+
   // Error handler
   app.setErrorHandler(errorHandler);
 
@@ -84,11 +89,6 @@ export async function buildApp() {
   await app.register(recordsRoutes, { prefix: `${env.API_PREFIX}/records` });
   await app.register(dashboardRoutes, { prefix: `${env.API_PREFIX}/dashboard` });
   await app.register(auditRoutes, { prefix: `${env.API_PREFIX}/audit` });
-
-  // Documentation (must be after routes so swagger can scan them)
-  if (swaggerEnabled) {
-    await app.register(swaggerPlugin);
-  }
 
   return app;
 }
