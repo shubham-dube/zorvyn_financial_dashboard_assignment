@@ -1,13 +1,10 @@
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
-import { getRedisClient, closeRedisClient } from '../lib/redis/client.js';
+import { initializeRedisConnection, closeRedisClient } from '../lib/redis/client.js';
 import type Redis from 'ioredis';
 
 async function redisPlugin(fastify: FastifyInstance) {
-  const redis = getRedisClient();
-
-  // Connect to Redis
-  await redis.connect();
+  const redis = await initializeRedisConnection();
 
   fastify.decorate('redis', redis);
 
@@ -15,7 +12,11 @@ async function redisPlugin(fastify: FastifyInstance) {
     await closeRedisClient();
   });
 
-  fastify.log.info('✓ Redis connected');
+  if (redis) {
+    fastify.log.info('✓ Redis connected');
+  } else {
+    fastify.log.warn('⚠ Redis unavailable, continuing in degraded mode');
+  }
 }
 
 export default fp(redisPlugin, {
@@ -24,6 +25,6 @@ export default fp(redisPlugin, {
 
 declare module 'fastify' {
   interface FastifyInstance {
-    redis: Redis;
+    redis: Redis | null;
   }
 }

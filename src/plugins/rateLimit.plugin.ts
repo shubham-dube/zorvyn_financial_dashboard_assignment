@@ -4,12 +4,11 @@ import rateLimit from '@fastify/rate-limit';
 import { CONSTANTS } from '../config/constants.js';
 
 async function rateLimitPlugin(fastify: FastifyInstance) {
-  await fastify.register(rateLimit, {
+  const options: Parameters<typeof rateLimit>[1] = {
     global: true,
     max: CONSTANTS.RATE_LIMIT.DEFAULT.max,
     // Plugin expects milliseconds for numeric windows.
     timeWindow: CONSTANTS.RATE_LIMIT.DEFAULT.window * 1000,
-    redis: fastify.redis,
     skipOnError: true,
     nameSpace: 'finance-api-rl:',
     continueExceeding: true,
@@ -25,9 +24,15 @@ async function rateLimitPlugin(fastify: FastifyInstance) {
       'x-ratelimit-reset': true,
       'retry-after': true,
     },
-  });
+  };
 
-  fastify.log.info('✓ Rate limiting enabled');
+  if (fastify.redis) {
+    options.redis = fastify.redis;
+  }
+
+  await fastify.register(rateLimit, options);
+
+  fastify.log.info(`✓ Rate limiting enabled (${fastify.redis ? 'redis' : 'memory'} store)`);
 }
 
 export default fp(rateLimitPlugin, {
