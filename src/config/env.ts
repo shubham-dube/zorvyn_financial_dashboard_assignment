@@ -28,6 +28,7 @@ const envSchema = z
     // Security
     CORS_ORIGIN: z.string().default('http://localhost:3000'),
     BCRYPT_ROUNDS: z.coerce.number().default(12),
+    SWAGGER_ENABLED: z.coerce.boolean().default(true),
 
     // Logging
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

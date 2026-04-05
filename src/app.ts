@@ -20,6 +20,8 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import auditRoutes from './modules/audit/audit.routes.js';
 
 export async function buildApp() {
+  const swaggerEnabled = env.NODE_ENV === 'development' || env.SWAGGER_ENABLED;
+
   const logger =
     env.NODE_ENV === 'development'
       ? {
@@ -47,7 +49,9 @@ export async function buildApp() {
 
   // Security plugins
   await app.register(helmet, {
-    contentSecurityPolicy: env.NODE_ENV === 'production',
+    // Swagger UI relies on scripts/styles that strict CSP can block.
+    // Keep CSP in production unless documentation is explicitly enabled.
+    contentSecurityPolicy: env.NODE_ENV === 'production' && !swaggerEnabled,
   });
 
   await app.register(cors, {
@@ -82,7 +86,7 @@ export async function buildApp() {
   await app.register(auditRoutes, { prefix: `${env.API_PREFIX}/audit` });
 
   // Documentation (must be after routes so swagger can scan them)
-  if (env.NODE_ENV === 'development') {
+  if (swaggerEnabled) {
     await app.register(swaggerPlugin);
   }
 

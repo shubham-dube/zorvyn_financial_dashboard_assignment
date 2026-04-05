@@ -48,7 +48,7 @@ async function swaggerPlugin(fastify: FastifyInstance) {
       docExpansion: 'list',
       deepLinking: true,
     },
-    staticCSP: true,
+    staticCSP: false,
   });
 
   fastify.log.info('✓ Swagger documentation available at /documentation');
