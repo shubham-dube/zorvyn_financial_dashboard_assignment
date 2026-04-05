@@ -1,0 +1,103 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  name         String
+  passwordHash String     @map("password_hash")
+  role         Role       @default(VIEWER)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  records   FinancialRecord[]
+  auditLogs AuditLog[]
+
+  @@index([email])
+  @@index([role, status])
+  @@map("users")
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  name      String
+  type      RecordType
+  isSystem  Boolean    @default(false) @map("is_system")
+  createdBy String?    @map("created_by")
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  records FinancialRecord[]
+
+  @@unique([name, type])
+  @@map("categories")
+}
+
+model FinancialRecord {
+  id          String     @id @default(uuid())
+  amount      Decimal    @db.Decimal(15, 2)
+  type        RecordType
+  categoryId  String     @map("category_id")
+  date        DateTime   @db.Date
+  notes       String?    @db.Text
+  createdById String     @map("created_by_id")
+  isDeleted   Boolean    @default(false) @map("is_deleted")
+  deletedAt   DateTime?  @map("deleted_at")
+  deletedById String?    @map("deleted_by_id")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  category  Category @relation(fields: [categoryId], references: [id])
+  createdBy User     @relation(fields: [createdById], references: [id])
+
+  @@index([date])
+  @@index([type])
+  @@index([categoryId])
+  @@index([createdById])
+  @@index([isDeleted, date])
+  @@map("financial_records")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  metadata   Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+enum Role {
+  VIEWER
+  ANALYST
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum RecordType {
+  INCOME
+  EXPENSE
+}
